@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: sumbill
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm --prefix server install && npm --prefix client install && npm run build
+    startCommand: node server/src/index.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
+      - key: JWT_SECRET
+        generateValue: true
