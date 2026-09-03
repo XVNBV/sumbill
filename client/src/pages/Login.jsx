@@ -41,16 +41,16 @@ export default function Login() {
         </div>
 
         <form onSubmit={onSubmit} className="hud-panel space-y-4 p-6">
-          <Field label="Email" htmlFor="email">
+          <Field label="Username" htmlFor="email">
             <input
               id="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               required
               className={inputBase}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nama@email.com"
+              placeholder="mis. ramdhan"
             />
           </Field>
           <Field label="Password" htmlFor="password">

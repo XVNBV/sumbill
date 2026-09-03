@@ -18,6 +18,14 @@ export default function Register() {
       setError('Konfirmasi password tidak cocok.');
       return;
     }
+    if (!email.trim()) {
+      setError('Username wajib diisi.');
+      return;
+    }
+    if (/\s/.test(email.trim())) {
+      setError('Username tidak boleh mengandung spasi.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -48,16 +56,16 @@ export default function Register() {
         </div>
 
         <form onSubmit={onSubmit} className="hud-panel space-y-4 p-6">
-          <Field label="Email" htmlFor="email">
+          <Field label="Username" htmlFor="email" hint="Tanpa spasi, tanpa wajib @">
             <input
               id="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               required
               className={inputBase}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nama@email.com"
+              placeholder="mis. ramdhan"
             />
           </Field>
           <Field label="Password" htmlFor="password" hint="Minimal 6 karakter">

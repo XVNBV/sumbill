@@ -5,17 +5,18 @@ import { signToken } from '../middleware/auth.js';
 
 const router = Router();
 
-function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function validateUsername(username) {
+  const s = String(username || '').trim();
+  return s.length >= 1 && !/\s/.test(s) && !/[\u0000-\u001f]/.test(s);
 }
 
 router.post('/register', (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email dan password wajib diisi' });
+    return res.status(400).json({ message: 'Username dan password wajib diisi' });
   }
-  if (!validateEmail(email)) {
-    return res.status(400).json({ message: 'Format email tidak valid' });
+  if (!validateUsername(email)) {
+    return res.status(400).json({ message: 'Username tidak valid: tidak boleh kosong, mengandung spasi, atau karakter aneh' });
   }
   if (String(password).length < 6) {
     return res
@@ -26,7 +27,7 @@ router.post('/register', (req, res) => {
     .prepare('SELECT id FROM users WHERE email = ?')
     .get(email.toLowerCase());
   if (existing) {
-    return res.status(409).json({ message: 'Email sudah terdaftar' });
+    return res.status(409).json({ message: 'Username sudah terdaftar' });
   }
   const hash = bcrypt.hashSync(String(password), 10);
   const info = db
@@ -39,13 +40,13 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email dan password wajib diisi' });
+    return res.status(400).json({ message: 'Username dan password wajib diisi' });
   }
   const user = db
     .prepare('SELECT * FROM users WHERE email = ?')
     .get(email.toLowerCase());
   if (!user || !bcrypt.compareSync(String(password), user.password_hash)) {
-    return res.status(401).json({ message: 'Email atau password salah' });
+    return res.status(401).json({ message: 'Username atau password salah' });
   }
   const safe = { id: user.id, email: user.email };
   res.json({ token: signToken(safe), user: safe });
