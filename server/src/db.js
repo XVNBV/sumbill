@@ -1,4 +1,4 @@
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'better-sqlite3';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -8,7 +8,7 @@ const dbPath = path.join(__dirname, '..', 'data', 'sumbill.db');
 import fs from 'node:fs';
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-const db = new DatabaseSync(dbPath);
+const db = new Database(dbPath);
 
 db.exec(`
   PRAGMA journal_mode = WAL;
