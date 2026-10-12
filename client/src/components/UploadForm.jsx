@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { runOcr, extractNominal } from '../utils/ocr.js';
+import { todayLocal } from '../utils/date.js';
 import { api } from '../api.js';
 import inputBase, { Field } from './Field.jsx';
 import CameraCapture from './CameraCapture.jsx';
@@ -32,12 +33,11 @@ const SUMBER_BAYAR = [
   'DANA',
   'ShopeePay',
   'LinkAja',
-  'QRIS',
   'Cash',
   'Lainnya',
 ];
 
-export default function UploadForm({ onSaved, onCancel }) {
+export default function UploadForm({ onSaved, onCancel, initialFile }) {
   const [preview, setPreview] = useState(null);
   const [file, setFile] = useState(null);
   const [manual, setManual] = useState(false);
@@ -45,9 +45,8 @@ export default function UploadForm({ onSaved, onCancel }) {
   const [state, setState] = useState('idle'); // idle | busy | confirm
   const [progress, setProgress] = useState(0);
   const [nominal, setNominal] = useState('');
-  const [tipe, setTipe] = useState('offline');
   const [kategori, setKategori] = useState('Lainnya');
-  const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 10));
+  const [tanggal, setTanggal] = useState(() => todayLocal());
   const [catatan, setCatatan] = useState('');
   const [sumberBayar, setSumberBayar] = useState('Lainnya');
   const [ocrRaw, setOcrRaw] = useState('');
@@ -56,34 +55,48 @@ export default function UploadForm({ onSaved, onCancel }) {
   const [ocrHint, setOcrHint] = useState(null);
   const inputRef = useRef(null);
 
+  useEffect(() => {
+    if (!initialFile) return;
+    preparePhoto(initialFile);
+    startOcr(initialFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
+
+  function preparePhoto(f) {
+    setFile(f);
+    setManual(false);
+    setShowCamera(false);
+    setError(null);
+    setPreview(URL.createObjectURL(f));
+    setState('idle');
+    setProgress(0);
+    setOcrHint(null);
+    setOcrRaw('');
+    setNominal('');
+    setSumberBayar('Lainnya');
+  }
+
   function handleFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setFile(f);
-    setManual(false);
-    setShowCamera(false);
-    setError(null);
-    setPreview(URL.createObjectURL(f));
-    setState('idle');
+    preparePhoto(f);
+    startOcr(f);
   }
 
   function handleCapture(f) {
-    setFile(f);
-    setManual(false);
-    setShowCamera(false);
-    setError(null);
-    setPreview(URL.createObjectURL(f));
-    setState('idle');
+    preparePhoto(f);
     if (inputRef.current) inputRef.current.value = '';
+    startOcr(f);
   }
 
-  async function startOcr() {
-    if (!file) return;
+  async function startOcr(targetFile) {
+    if (!targetFile) return;
     setState('busy');
     setProgress(0);
     setOcrHint(null);
+    setError(null);
     try {
-      const res = await runOcr(file, setProgress);
+      const res = await runOcr(targetFile, setProgress);
       setOcrRaw(res.text);
       if (res.sumberBayar) {
         setSumberBayar(res.sumberBayar);
@@ -121,9 +134,8 @@ export default function UploadForm({ onSaved, onCancel }) {
     const fd = new FormData();
     if (file) fd.append('foto', file);
     fd.append('nominal', nominal.replace(/\./g, '').replace(',', '.'));
-    fd.append('tipe', tipe);
     fd.append('kategori', kategori);
-    fd.append('tanggal', tanggal || new Date().toISOString().slice(0, 10));
+    fd.append('tanggal', tanggal || todayLocal());
     fd.append('catatan', catatan);
     fd.append('sumber_bayar', sumberBayar);
     fd.append('ocr_text', ocrRaw);
@@ -152,30 +164,27 @@ export default function UploadForm({ onSaved, onCancel }) {
     setOcrHint(null);
     setSumberBayar('Lainnya');
     setKategori('Lainnya');
-    setTipe('offline');
-    setTanggal(new Date().toISOString().slice(0, 10));
+    setTanggal(todayLocal());
     if (inputRef.current) inputRef.current.value = '';
   }
 
   return (
-    <div className="hud-panel p-5 sm:p-6">
+    <div className="card p-5 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-display text-base font-bold tracking-[0.12em] text-brk">
-          TAMBAH NOTA
-        </h2>
+        <h2 className="font-display text-lg font-bold text-ink">Tambah nota</h2>
         {onCancel && (
           <button
             onClick={onCancel}
-            className="btn-ghost px-3 py-1.5 font-mono text-xs"
+            className="btn-ghost px-3 py-1.5 text-xs"
           >
-            &lt; kembali
+            Kembali
           </button>
         )}
       </div>
 
       {!file && !manual && (
         <div className="space-y-3">
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-edge bg-void/50 px-4 py-10 text-center transition-colors hover:border-neon/60 hover:bg-neon/5">
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-surface2 px-4 py-10 text-center transition-colors hover:border-primary/60 hover:bg-primary/5">
             <input
               ref={inputRef}
               type="file"
@@ -183,23 +192,21 @@ export default function UploadForm({ onSaved, onCancel }) {
               className="sr-only"
               onChange={handleFile}
             />
-            <span className="grid h-10 w-10 place-items-center rounded-full border border-neon/40 bg-neon/10 text-neon shadow-neon-sm">
+            <span className="grid h-10 w-10 place-items-center rounded-full border border-primary/30 bg-primary/10 text-primary">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
                 <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
               </svg>
             </span>
-            <span className="font-mono text-sm font-medium text-brk">
-              &gt; pilih foto nota / screenshot_
-            </span>
-            <span className="font-mono text-xs text-dim">
-              nota fisik maupun transaksi online (QRIS / e-wallet)
+            <span className="text-sm font-medium text-ink">Pilih foto nota atau screenshot</span>
+            <span className="text-xs text-muted">
+              Nota fisik maupun transaksi online (QRIS / e-wallet)
             </span>
           </label>
 
           <div className="flex items-center gap-3">
             <span className="h-px flex-1 bg-line" />
-            <span className="font-mono text-xs text-dim">atau</span>
+            <span className="text-xs text-muted">atau</span>
             <span className="h-px flex-1 bg-line" />
           </div>
 
@@ -213,7 +220,7 @@ export default function UploadForm({ onSaved, onCancel }) {
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z" />
                 <circle cx="12" cy="13" r="4" />
               </svg>
-              ambil foto langsung
+              Ambil foto langsung
             </button>
             <button
               type="button"
@@ -224,26 +231,24 @@ export default function UploadForm({ onSaved, onCancel }) {
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
-              input manual — tanpa foto
+              Input manual — tanpa foto
             </button>
           </div>
         </div>
       )}
 
       {manual && (
-        <div className="flex items-center justify-between rounded-lg border border-volt/40 bg-volt/10 px-3 py-2">
-          <span className="font-mono text-xs uppercase tracking-[0.14em] text-volt">
-            &gt; input manual — tanpa nota
-          </span>
+        <div className="flex items-center justify-between rounded-md border border-warning/40 bg-warning/10 px-3 py-2">
+          <span className="text-xs font-semibold text-warning">Input manual — tanpa nota</span>
           <button
             type="button"
             onClick={() => {
               setManual(false);
               setError(null);
             }}
-            className="font-mono text-xs text-dim hover:text-neon"
+            className="text-xs text-muted hover:text-primary"
           >
-            [batal]
+            Batal
           </button>
         </div>
       )}
@@ -255,25 +260,25 @@ export default function UploadForm({ onSaved, onCancel }) {
               <img
                 src={preview}
                 alt="Pratinjau nota"
-                className="h-28 w-28 rounded-xl border border-edge object-cover"
+                className="h-28 w-28 rounded-lg border border-line object-cover"
               />
               <div className="flex-1">
-                <p className="truncate font-mono text-sm text-brk">{file.name}</p>
+                <p className="truncate text-sm text-ink">{file.name}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={reset}
-                    className="btn-ghost px-3 py-1.5 font-mono text-xs"
+                    className="btn-ghost px-3 py-1.5 text-xs"
                   >
-                    ganti foto
+                    Ganti foto
                   </button>
                   {state === 'idle' && (
                     <button
                       type="button"
-                      onClick={startOcr}
-                      className="btn-neon px-3 py-1.5 font-mono text-xs tracking-[0.1em]"
+                      onClick={() => startOcr(file)}
+                      className="btn-primary px-3 py-1.5 text-xs"
                     >
-                      baca OCR_
+                      Coba lagi
                     </button>
                   )}
                 </div>
@@ -282,14 +287,14 @@ export default function UploadForm({ onSaved, onCancel }) {
           )}
 
           {state === 'busy' && (
-            <div className="rounded-xl border border-line bg-panel/60 p-4">
-              <div className="mb-2 flex items-center justify-between font-mono text-sm">
-                <span className="text-dim">membaca teks dari foto…</span>
-                <span className="neon-text tabular">{Math.round(progress * 100)}%</span>
+            <div className="rounded-lg border border-line bg-surface2 p-4">
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="text-muted">Membaca teks dari foto…</span>
+                <span className="amount tabular">{Math.round(progress * 100)}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-line">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-neon to-mag shadow-neon-sm transition-all duration-300"
+                  className="h-full rounded-full bg-primary transition-all duration-300"
                   style={{ width: `${Math.round(progress * 100)}%` }}
                 />
               </div>
@@ -311,33 +316,6 @@ export default function UploadForm({ onSaved, onCancel }) {
                   onChange={(e) => setNominal(e.target.value)}
                   placeholder="mis. 25000"
                 />
-              </Field>
-
-              <Field label="Jenis nota" htmlFor="tipe">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTipe('offline')}
-                    className={`rounded-lg border px-3 py-2 font-mono text-sm font-medium transition-colors ${
-                      tipe === 'offline'
-                        ? 'border-neon bg-neon/15 text-neon shadow-neon-sm'
-                        : 'border-edge bg-panel/60 text-dim hover:border-neon/50 hover:text-neon'
-                    }`}
-                  >
-                    OFFLINE
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTipe('online')}
-                    className={`rounded-lg border px-3 py-2 font-mono text-sm font-medium transition-colors ${
-                      tipe === 'online'
-                        ? 'border-mag bg-mag/15 text-mag shadow-mag'
-                        : 'border-edge bg-panel/60 text-dim hover:border-mag/50 hover:text-mag'
-                    }`}
-                  >
-                    ONLINE
-                  </button>
-                </div>
               </Field>
 
               <Field label="Sumber pembayaran" htmlFor="sumber-bayar">
@@ -395,8 +373,8 @@ export default function UploadForm({ onSaved, onCancel }) {
           ) : null}
 
           {error && (
-            <p className="rounded-lg border border-blood/40 bg-blood/10 px-3 py-2 font-mono text-sm text-blood">
-              ! {error}
+            <p className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
             </p>
           )}
 
@@ -405,18 +383,18 @@ export default function UploadForm({ onSaved, onCancel }) {
               <button
                 type="button"
                 onClick={resetOcrRetry}
-                className="rounded-lg px-3 py-2 font-mono text-sm text-dim hover:text-neon"
+                className="rounded-md px-3 py-2 text-sm text-muted hover:text-primary"
               >
-                [ulangi OCR]
+                Ulangi OCR
               </button>
             )}
             <button
               type="button"
               onClick={save}
               disabled={saving || !(manual || state === 'confirm')}
-              className="btn-neon font-display tracking-[0.12em] disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {saving ? 'SIMPAN…' : 'SIMPAN NOTA'}
+              {saving ? 'Menyimpan…' : 'Simpan nota'}
             </button>
           </div>
         </div>

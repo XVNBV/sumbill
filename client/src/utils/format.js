@@ -19,16 +19,9 @@ export function formatDate(s) {
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export const TIPE_LABEL = { online: 'Online', offline: 'Offline' };
-
 export const STATUS_LABEL = { verified: 'Terverifikasi', pending: 'Perlu verifikasi' };
 
 export const STATUS_BADGE = {
-  verified: 'text-neon border-neon/40 bg-neon/10',
-  pending: 'text-volt border-volt/40 bg-volt/10',
-};
-
-export const TIPE_BADGE = {
-  online: 'text-mag border-mag/40 bg-mag/10',
-  offline: 'text-dim border-edge bg-panel',
+  verified: 'text-primary border-primary/40 bg-primary/10',
+  pending: 'text-warning border-warning/40 bg-warning/10',
 };

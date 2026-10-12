@@ -26,7 +26,19 @@ app.get('/api/kategori', (_req, res) => {
 
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
+  app.use(
+    express.static(clientDist, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.webmanifest')) {
+          res.setHeader('Content-Type', 'application/manifest+json');
+        }
+        if (filePath.endsWith('sw.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+      },
+    }),
+  );
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
     res.sendFile(path.join(clientDist, 'index.html'));

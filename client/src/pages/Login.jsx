@@ -13,10 +13,11 @@ export default function Login() {
 
   async function onSubmit(e) {
     e.preventDefault();
+    if (!email.trim()) { setError('Email wajib diisi.'); return; }
     setSubmitting(true);
     setError(null);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -32,25 +33,23 @@ export default function Login() {
           <img
             src="/logo.png"
             alt="SumBill"
-            className="h-56 w-56 animate-flicker object-contain"
+            className="h-24 w-24 object-contain"
           />
-          <h1 className="neon-title text-xl">SUMBILL</h1>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-dim">
-            // akses terminal nota
-          </p>
+          <h1 className="title text-2xl">SumBill</h1>
+          <p className="text-sm text-muted">Kelola pengeluaran dari foto nota</p>
         </div>
 
-        <form onSubmit={onSubmit} className="hud-panel space-y-4 p-6">
-          <Field label="Username" htmlFor="email">
+        <form onSubmit={onSubmit} className="card space-y-4 p-6">
+          <Field label="Email" htmlFor="email">
             <input
               id="email"
-              type="text"
-              autoComplete="username"
+              type="email"
+              autoComplete="email"
               required
               className={inputBase}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="mis. ramdhan"
+              placeholder="mis. kamu@email.com"
             />
           </Field>
           <Field label="Password" htmlFor="password">
@@ -67,24 +66,24 @@ export default function Login() {
           </Field>
 
           {error && (
-            <p className="rounded-lg border border-blood/40 bg-blood/10 px-3 py-2 font-mono text-sm text-blood">
-              ! {error}
+            <p className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
             </p>
           )}
 
           <button
             type="submit"
             disabled={submitting}
-            className="btn-neon w-full font-display tracking-[0.14em]"
+            className="btn-primary w-full font-display tracking-[0.14em]"
           >
             {submitting ? 'MASUK…' : 'MASUK'}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-dim">
+        <p className="mt-4 text-center text-sm text-muted">
           Belum punya akun?{' '}
-          <Link to="/register" className="font-mono font-medium text-neon hover:underline">
-            [ daftar ]
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            Daftar
           </Link>
         </p>
       </div>

@@ -54,15 +54,15 @@ export default function CameraCapture({ onCapture, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-void/95 backdrop-blur">
-      <div className="hud-panel mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden m-4">
+    <div className="fixed inset-0 z-50 flex flex-col bg-ink/80 backdrop-blur">
+      <div className="card mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden m-4">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <span className="hud-label">// kamera — ambil foto nota langsung</span>
+          <span className="label">Kamera — ambil foto nota</span>
           <button
             onClick={onClose}
-            className="font-mono text-sm text-dim hover:text-neon"
+            className="text-sm text-muted hover:text-primary"
           >
-            [tutup]
+            Tutup
           </button>
         </div>
 
@@ -70,9 +70,9 @@ export default function CameraCapture({ onCapture, onClose }) {
           {error ? (
             <div className="grid h-full place-items-center p-8 text-center">
               <div>
-                <p className="font-mono text-sm text-blood">! {error}</p>
-                <button onClick={onClose} className="btn-ghost mt-4 font-mono text-xs">
-                  [kembali]
+                <p className="text-sm text-danger">{error}</p>
+                <button onClick={onClose} className="btn-ghost mt-4 text-xs">
+                  Kembali
                 </button>
               </div>
             </div>
@@ -85,9 +85,9 @@ export default function CameraCapture({ onCapture, onClose }) {
                 className="absolute inset-0 h-full w-full object-contain"
               />
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <span className="h-64 w-64 rounded-xl border-2 border-dashed border-neon/50" />
+                <span className="h-64 w-64 rounded-xl border-2 border-dashed border-primary/50" />
               </div>
-              <span className="pointer-events-none absolute left-3 top-3 animate-pulseNeon rounded-full bg-neon/10 px-2 py-0.5 font-mono text-xs text-neon">
+              <span className="pointer-events-none absolute left-3 top-3 animate-pulse-soft rounded-full bg-primary/10 px-2 py-0.5  text-xs text-primary">
                 REC
               </span>
             </>
@@ -99,7 +99,7 @@ export default function CameraCapture({ onCapture, onClose }) {
             <button
               onClick={capture}
               disabled={busy}
-              className="btn-neon rounded-full px-6 font-display tracking-[0.14em] disabled:opacity-50"
+              className="btn-primary rounded-full px-6 font-display tracking-[0.14em] disabled:opacity-50"
             >
               {busy ? 'MENYIMPAN…' : 'AMBIL'}
             </button>

@@ -22,7 +22,6 @@ const SUMBER_BAYAR = [
   { label: 'DANA', tokens: ['dana'] },
   { label: 'ShopeePay', tokens: ['shopeepay', 'shopee pay', 'spay'] },
   { label: 'LinkAja', tokens: ['linkaja', 'link aja'] },
-  { label: 'QRIS', tokens: ['qris'] },
   { label: 'Cash', tokens: ['cash', 'cashier'] },
 ];
 
